@@ -3,6 +3,9 @@
 Sistema POS para balanzas electrónicas por puerto serial (USB).
 Desarrollado por **P. Gallardo** — © 2026 Todos los derechos reservados.
 
+Repositorio: https://github.com/pgallardob/balanza-pos
+Descripción general del proyecto: `README.md`
+
 ---
 
 ## Funcionalidades actuales
@@ -131,6 +134,23 @@ en cada push a `main` (o manualmente desde la pestaña **Actions**).
 Los ejecutables quedan como **artifacts** descargables en cada ejecución
 del workflow: `balanza-pos-windows-latest`, `balanza-pos-macos-latest`,
 `balanza-pos-ubuntu-latest`.
+
+### Configuración del workflow (notas importantes)
+
+- **`GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`** a nivel de job: electron-
+  builder descarga sus herramientas (nsis, dmg, appimagetool) desde la
+  API de GitHub; sin token el runner choca con el rate limit y los 3
+  builds fallan.
+- **`npm ci`** (no `npm install`): instalación reproducible desde
+  `package-lock.json`.
+- **`libfuse2` en Ubuntu**: `appimagetool` la necesita y `ubuntu-latest`
+  no la trae instalada; el workflow la instala antes del build.
+- **Icono PNG para Linux**: `build.linux.icon` apunta a
+  `assets/icon.png` (512×512). Linux no acepta `.ico`/`.icns`.
+- **`maintainer` con email**: el target `deb` exige el formato
+  `Nombre <email>`; está definido en `author` y en
+  `build.linux.maintainer` de `package.json`. Sin esto el build de
+  Linux falla aunque Windows y macOS pasen.
 
 ---
 
