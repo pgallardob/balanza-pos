@@ -1,0 +1,105 @@
+balanza-pos/
+├── package.json
+├── electron-builder.yml
+├── main.js
+├── preload.js
+├── balanza.js
+├── storage.js
+├── index.html
+├── styles.css
+├── renderer.js
+├── protocols.js
+└── assets/
+    ├── icon.ico
+    ├── icon.icns
+    └── icon.png
+
+
+La parte de comunicación quedará preparada para:
+
+RS-232.
+
+USB → RS-232.
+
+USB-Serial.
+
+CH340.
+
+FTDI.
+
+Prolific.
+
+Adaptadores seriales equivalentes.
+
+Balanzas que envían peso continuamente.
+
+Balanzas que requieren comando para solicitar el peso.
+
+Diferentes velocidades seriales.
+
+Diferentes terminadores.
+
+Diferentes formatos de respuesta.
+
+Peso en g, kg y lb.
+
+Separador decimal . o ,.
+
+Datos con texto adicional.
+
+Datos tipo ST,GS, 0.200 kg.
+
+Datos tipo 200 g.
+
+Datos tipo 0.200.
+
+Datos tipo 200.00.
+
+Configuración personalizada del parser.
+
+
+La aplicación será:
+
+              BALANZA POS
+                    │
+          ┌─────────┴─────────┐
+          │                   │
+      BALANZA 1          BALANZA 2
+       RHINO              OTRA MARCA
+          │                   │
+          └─────────┬─────────┘
+                    │
+                JavaScript
+                    │
+             ┌──────┴──────┐
+             │             │
+           PESO          PRECIO
+             │             │
+             └──────┬──────┘
+                    │
+                  TOTAL
+                    │
+       ┌────────────┼────────────┐
+       │            │            │
+     DÉBITO       CRÉDITO    TRANSFERENCIA
+                                  │
+                              EFECTIVO
+                                  │
+                              PAGA CON
+                                  │
+                                VUELTO
+
+
+Y el instalador se generará para:
+
+Windows
+├── x64
+└── ARM64
+
+macOS
+├── Intel
+└── Apple Silicon
+
+Linux
+├── x64
+└── ARM64

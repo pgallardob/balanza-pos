@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+  >
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <title>Balanza POS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="app">
+
+  <header class="header">
+    <div>
+      <h1>Balanza POS</h1>
+      <span class="subtitle">La Osita Gestiones</span>
+    </div>
+
+    <img
+      class="logo"
+      src="assets/laosita.jpeg"
+      alt="La Osita"
+    >
+
+    <div id="connectionStatus" class="status disconnected">
+      <span class="status-dot"></span>
+      <span id="connectionText">Desconectada</span>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="main-card">
+
+      <div class="weight-area">
+        <div class="label">PESO</div>
+
+        <div id="weightDisplay" class="weight">
+          0
+        </div>
+
+        <div class="unit">gramos</div>
+      </div>
+
+      <div class="price-area">
+        <label for="pricePerKilo">
+          Precio por kilo
+        </label>
+
+        <div class="money-input">
+          <span>$</span>
+          <input
+            id="pricePerKilo"
+            type="number"
+            min="0"
+            step="1"
+            value="0"
+            inputmode="numeric"
+          >
+        </div>
+      </div>
+
+      <div class="total-area">
+        <div class="label">TOTAL</div>
+
+        <div id="totalDisplay" class="total">
+          $0
+        </div>
+      </div>
+
+    </section>
+
+    <section class="payment-card">
+
+      <h2>Medio de pago</h2>
+
+      <div class="payment-buttons">
+
+        <button
+          class="payment-button"
+          data-payment="debito"
+        >
+          <span>Débito</span>
+        </button>
+
+        <button
+          class="payment-button"
+          data-payment="credito"
+        >
+          <span>Crédito</span>
+        </button>
+
+        <button
+          class="payment-button"
+          data-payment="efectivo"
+        >
+          <span>Efectivo</span>
+        </button>
+
+        <button
+          class="payment-button"
+          data-payment="transferencia"
+        >
+          <span>Transferencia</span>
+        </button>
+
+      </div>
+
+      <div
+        id="cashPanel"
+        class="cash-panel hidden"
+      >
+
+        <label for="cashReceived">
+          Paga con
+        </label>
+
+        <div class="money-input">
+          <span>$</span>
+
+          <input
+            id="cashReceived"
+            type="number"
+            min="0"
+            step="1"
+            inputmode="numeric"
+          >
+        </div>
+
+        <div
+          id="cashResult"
+          class="cash-result"
+        >
+          <div>
+            <span>Total</span>
+            <strong id="cashTotal">$0</strong>
+          </div>
+
+          <div>
+            <span>Vuelto</span>
+            <strong id="changeDisplay">$0</strong>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <div
+      id="message"
+      class="message hidden"
+    ></div>
+
+    <div class="actions">
+
+      <button
+        id="newSaleButton"
+        class="new-sale"
+      >
+        Nueva venta
+      </button>
+
+      <button
+        id="payButton"
+        class="pay-button"
+      >
+        Pagar
+      </button>
+
+      <button
+        id="historyButton"
+        class="history-button"
+      >
+        Historial
+      </button>
+
+      <button
+        id="settingsButton"
+        class="settings-button"
+      >
+        Configuración
+      </button>
+
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    © 2026 Todos los derechos reservados · Desarrollado por P. Gallardo
+  </footer>
+
+</div>
+
+
+<div
+  id="settingsModal"
+  class="modal hidden"
+>
+
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2>Configuración de balanza</h2>
+
+      <button
+        id="closeSettings"
+        class="close-button"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="field full">
+        <label for="port">
+          Puerto
+        </label>
+
+        <div class="port-row">
+
+          <select id="port"></select>
+
+          <button id="refreshPorts">
+            Actualizar
+          </button>
+
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="baudRate">
+          Velocidad
+        </label>
+
+        <select id="baudRate">
+          <option value="1200">1200</option>
+          <option value="2400">2400</option>
+          <option value="4800">4800</option>
+          <option value="9600">9600</option>
+          <option value="19200">19200</option>
+          <option value="38400">38400</option>
+          <option value="57600">57600</option>
+          <option value="115200">115200</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="dataBits">
+          Bits de datos
+        </label>
+
+        <select id="dataBits">
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8" selected>8</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="stopBits">
+          Bits de parada
+        </label>
+
+        <select id="stopBits">
+          <option value="1">1</option>
+          <option value="2">2</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="parity">
+          Paridad
+        </label>
+
+        <select id="parity">
+          <option value="none">Ninguna</option>
+          <option value="even">Par</option>
+          <option value="odd">Impar</option>
+          <option value="mark">Mark</option>
+          <option value="space">Space</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="flowControl">
+          Control de flujo
+        </label>
+
+        <select id="flowControl">
+          <option value="none">Ninguno</option>
+          <option value="hardware">Hardware</option>
+          <option value="software">Software</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="mode">
+          Comunicación
+        </label>
+
+        <select id="mode">
+          <option value="continuous">
+            Envío continuo
+          </option>
+
+          <option value="request">
+            Solicitar peso
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="unit">
+          Unidad recibida
+        </label>
+
+        <select id="unit">
+          <option value="g">Gramos</option>
+          <option value="kg">Kilogramos</option>
+          <option value="lb">Libras</option>
+          <option value="oz">Onzas</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="decimalSeparator">
+          Separador decimal
+        </label>
+
+        <select id="decimalSeparator">
+          <option value=".">Punto</option>
+          <option value=",">Coma</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="command">
+          Comando de peso
+        </label>
+
+        <input
+          id="command"
+          type="text"
+          value="P"
+        >
+      </div>
+
+      <div class="field">
+        <label for="commandHex">
+          Comando hexadecimal
+        </label>
+
+        <select id="commandHex">
+          <option value="false">No</option>
+          <option value="true">Sí</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="lineEnding">
+          Terminador
+        </label>
+
+        <select id="lineEnding">
+          <option value="auto">Automático</option>
+          <option value="lf">LF</option>
+          <option value="cr">CR</option>
+          <option value="crlf">CRLF</option>
+        </select>
+      </div>
+
+      <div class="field full">
+        <label for="customRegex">
+          Expresión personalizada para peso
+        </label>
+
+        <input
+          id="customRegex"
+          type="text"
+          placeholder="Ejemplo: (?<weight>-?\d+[.,]?\d*)\s*(?<unit>kg|g)?"
+        >
+      </div>
+
+      <div class="field checkbox-field full">
+
+        <label>
+          <input
+            id="stableOnly"
+            type="checkbox"
+          >
+
+          Aceptar solamente peso estable
+        </label>
+
+      </div>
+
+    </div>
+
+    <div
+      id="settingsError"
+      class="settings-error hidden"
+    ></div>
+
+    <div class="modal-actions">
+
+      <button
+        id="disconnectButton"
+        class="danger-button"
+      >
+        Desconectar
+      </button>
+
+      <div>
+        <button
+          id="cancelSettings"
+          class="secondary-button"
+        >
+          Cancelar
+        </button>
+
+        <button
+          id="saveSettings"
+          class="primary-button"
+        >
+          Guardar y conectar
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div
+  id="historyModal"
+  class="modal hidden"
+>
+
+  <div class="modal-content history-content">
+
+    <div class="modal-header">
+      <h2>Historial de ventas</h2>
+
+      <button
+        id="closeHistory"
+        class="close-button"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="history-toolbar">
+
+      <div class="history-filter">
+        <label for="historyDate">Filtrar por día</label>
+
+        <input
+          id="historyDate"
+          type="date"
+        >
+
+        <button
+          id="historyClearFilter"
+          class="secondary-button"
+        >
+          Ver todo
+        </button>
+      </div>
+
+      <button
+        id="printHistory"
+        class="primary-button"
+      >
+        Imprimir
+      </button>
+
+    </div>
+
+    <div
+      id="historySummary"
+      class="history-summary"
+    ></div>
+
+    <div class="history-table-wrap">
+
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Peso (g)</th>
+            <th>Precio/kg</th>
+            <th>Total</th>
+            <th>Pago</th>
+            <th>Recibido</th>
+            <th>Vuelto</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+
+      <div
+        id="historyEmpty"
+        class="history-empty hidden"
+      >
+        No hay ventas registradas todavía.
+      </div>
+
+    </div>
+
+    <div class="modal-actions">
+
+      <div></div>
+
+      <div>
+        <button
+          id="closeHistoryBottom"
+          class="secondary-button"
+        >
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script src="renderer.js"></script>
+
+</body>
+</html>

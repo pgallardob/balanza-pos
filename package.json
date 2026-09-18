@@ -1,0 +1,71 @@
+{
+  "name": "balanza-pos",
+  "version": "1.0.0",
+  "description": "Sistema POS para balanzas electrónicas mediante conexión serial USB",
+  "main": "main.js",
+  "author": "Balanza POS",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "serialport": "^13.0.0"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.balanzapos.app",
+    "productName": "Balanza POS",
+    "asar": true,
+    "npmRebuild": false,
+    "files": [
+      "main.js",
+      "preload.js",
+      "balanza.js",
+      "storage.js",
+      "sales.js",
+      "protocols.js",
+      "index.html",
+      "styles.css",
+      "renderer.js",
+      "assets/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Balanza POS"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.business",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office"
+    }
+  }
+}
