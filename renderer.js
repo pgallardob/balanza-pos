@@ -47,15 +47,61 @@ const elements = {
   commandHex: $("commandHex"),
   lineEnding: $("lineEnding"),
   customRegex: $("customRegex"),
-  stableOnly: $("stableOnly")
+  stableOnly: $("stableOnly"),
+  saleProduct: $("saleProduct"),
+  stockModal: $("stockModal"),
+  closeStock: $("closeStock"),
+  cancelStock: $("cancelStock"),
+  saveStockButton: $("saveStockButton"),
+  stockExistente: $("stockExistente"),
+  stockProducto: $("stockProducto"),
+  stockMarca: $("stockMarca"),
+  stockVariedad: $("stockVariedad"),
+  stockCantidad: $("stockCantidad"),
+  stockValor: $("stockValor"),
+  stockMax: $("stockMax"),
+  stockError: $("stockError"),
+  stockTableBody: $("stockTableBody"),
+  stockEmpty: $("stockEmpty"),
+  stockStatusModal: $("stockStatusModal"),
+  closeStockStatus: $("closeStockStatus"),
+  closeStockStatusBottom: $("closeStockStatusBottom"),
+  stockStatusBody: $("stockStatusBody"),
+  stockStatusEmpty: $("stockStatusEmpty"),
+  stockStatusSummary: $("stockStatusSummary"),
+  stockEditModal: $("stockEditModal"),
+  closeStockEdit: $("closeStockEdit"),
+  cancelStockEdit: $("cancelStockEdit"),
+  saveStockEditButton: $("saveStockEditButton"),
+  editProducto: $("editProducto"),
+  editMarca: $("editMarca"),
+  editVariedad: $("editVariedad"),
+  editCantidad: $("editCantidad"),
+  editValor: $("editValor"),
+  editMax: $("editMax"),
+  stockEditError: $("stockEditError"),
+  stockDeleteModal: $("stockDeleteModal"),
+  closeStockDelete: $("closeStockDelete"),
+  cancelStockDelete: $("cancelStockDelete"),
+  confirmStockDeleteButton: $("confirmStockDeleteButton"),
+  stockDeleteText: $("stockDeleteText")
 };
 
 const state = {
   weightGrams: 0,
   total: 0,
   paymentMethod: null,
-  connected: false
+  connected: false,
+  stockRows: [],
+  editingStock: null,
+  deletingStock: null
 };
+
+const EDIT_ICON =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
+
+const DELETE_ICON =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>';
 
 let messageTimer = null;
 let historyData = { rows: [], count: 0, totalSum: 0 };
@@ -72,6 +118,34 @@ function formatGrams(value) {
   return new Intl.NumberFormat("es-CL", {
     maximumFractionDigits: 3
   }).format(Number(value) || 0);
+}
+
+function parseStockGrams(value) {
+  const number = Number(
+    String(value ?? "").replace(",", ".")
+  );
+
+  return Number.isFinite(number) ? number : 0;
+}
+
+function formatKg(grams) {
+  const kg = parseStockGrams(grams) / 1000;
+
+  return `${new Intl.NumberFormat("es-CL", {
+    maximumFractionDigits: 3
+  }).format(kg)} kg`;
+}
+
+function kgInputString(grams) {
+  const kg = parseStockGrams(grams) / 1000;
+
+  if (!Number.isFinite(kg) || kg <= 0) {
+    return "";
+  }
+
+  return Number.isInteger(kg)
+    ? String(kg)
+    : String(kg).replace(".", ",");
 }
 
 function showMessage(text, type = "") {
@@ -98,6 +172,19 @@ function showSettingsError(text) {
 
   elements.settingsError.textContent = text;
   elements.settingsError.classList.remove("hidden");
+}
+
+function showStockError(text) {
+  if (!elements.stockError) return;
+
+  if (!text) {
+    elements.stockError.classList.add("hidden");
+    elements.stockError.textContent = "";
+    return;
+  }
+
+  elements.stockError.textContent = text;
+  elements.stockError.classList.remove("hidden");
 }
 
 function calculateTotal() {
@@ -211,6 +298,536 @@ function updateCash() {
   }
 }
 
+function productLabel(row) {
+  return [row?.producto, row?.marca, row?.variedad]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function sortedStockRows() {
+  const compare = (x, y) =>
+    String(x || "").localeCompare(
+      String(y || ""),
+      "es",
+      { sensitivity: "base" }
+    );
+
+  return [...state.stockRows].sort(
+    (a, b) =>
+      compare(a.producto, b.producto) ||
+      compare(a.marca, b.marca) ||
+      compare(a.variedad, b.variedad)
+  );
+}
+
+async function loadStockOptions() {
+  try {
+    const data = await window.balanzaAPI?.listStock();
+
+    if (data?.ok === false) {
+      throw new Error(
+        data.error || "No se pudo leer el stock."
+      );
+    }
+
+    state.stockRows = Array.isArray(data?.rows)
+      ? data.rows
+      : [];
+  } catch (error) {
+    state.stockRows = [];
+    showMessage(
+      error?.message || "No se pudo leer el stock.",
+      "error"
+    );
+  }
+
+  renderStockSelector();
+  renderSaleProductSelector();
+}
+
+function renderSaleProductSelector() {
+  if (!elements.saleProduct) return;
+
+  const previous = elements.saleProduct.value;
+
+  elements.saleProduct.innerHTML = "";
+
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "Seleccionar";
+  elements.saleProduct.appendChild(none);
+
+  for (const row of sortedStockRows()) {
+    const option = document.createElement("option");
+    option.value = productLabel(row);
+    option.textContent = `${productLabel(
+      row
+    )} · disp. ${formatKg(row.cantidad_g)}`;
+    elements.saleProduct.appendChild(option);
+  }
+
+  const stillThere = [...elements.saleProduct.options].some(
+    (option) => option.value === previous
+  );
+
+  elements.saleProduct.value =
+    previous && stillThere ? previous : "";
+}
+
+function getSelectedSaleProduct() {
+  const label = elements.saleProduct?.value;
+
+  return label
+    ? state.stockRows.find(
+        (row) => productLabel(row) === label
+      ) || null
+    : null;
+}
+
+function onSaleProductChange() {
+  const row = getSelectedSaleProduct();
+
+  if (row && elements.pricePerKilo) {
+    elements.pricePerKilo.value = Math.round(
+      parseStockGrams(row.valor_kg)
+    );
+  }
+
+  calculateTotal();
+}
+
+function renderStockSelector() {
+  if (!elements.stockExistente) return;
+
+  const previous = elements.stockExistente.value;
+
+  elements.stockExistente.innerHTML = "";
+
+  const nuevo = document.createElement("option");
+  nuevo.value = "";
+  nuevo.textContent = "— Nuevo producto —";
+  elements.stockExistente.appendChild(nuevo);
+
+  for (const row of sortedStockRows()) {
+    const option = document.createElement("option");
+    option.value = productLabel(row);
+    option.textContent = `${productLabel(
+      row
+    )} · disp. ${formatKg(row.cantidad_g)}`;
+    elements.stockExistente.appendChild(option);
+  }
+
+  const stillThere = [...elements.stockExistente.options].some(
+    (option) => option.value === previous
+  );
+
+  elements.stockExistente.value =
+    previous && stillThere ? previous : "";
+}
+
+function onStockExistenteChange() {
+  const label = elements.stockExistente?.value;
+
+  const row = label
+    ? state.stockRows.find(
+        (item) => productLabel(item) === label
+      )
+    : null;
+
+  const isExisting = Boolean(row);
+
+  if (elements.stockProducto) {
+    elements.stockProducto.value = row?.producto || "";
+    elements.stockProducto.readOnly = isExisting;
+  }
+
+  if (elements.stockMarca) {
+    elements.stockMarca.value = row?.marca || "";
+    elements.stockMarca.readOnly = isExisting;
+  }
+
+  if (elements.stockVariedad) {
+    elements.stockVariedad.value = row?.variedad || "";
+    elements.stockVariedad.readOnly = isExisting;
+  }
+
+  if (elements.stockValor) {
+    elements.stockValor.value = row
+      ? Math.round(parseStockGrams(row.valor_kg))
+      : "";
+  }
+
+  if (elements.stockMax) {
+    elements.stockMax.value = row
+      ? kgInputString(row.stock_max_g)
+      : "";
+  }
+}
+
+function renderStockTable() {
+  if (!elements.stockTableBody) return;
+
+  elements.stockTableBody.innerHTML = "";
+
+  const rows = sortedStockRows();
+
+  elements.stockEmpty?.classList.toggle(
+    "hidden",
+    rows.length > 0
+  );
+
+  for (const row of rows) {
+    const tr = document.createElement("tr");
+
+    const values = [
+      row.producto || "-",
+      row.marca || "-",
+      row.variedad || "-",
+      formatKg(row.cantidad_g),
+      money(row.valor_kg),
+      formatKg(row.stock_max_g)
+    ];
+
+    for (const value of values) {
+      const td = document.createElement("td");
+      td.textContent = value;
+      tr.appendChild(td);
+    }
+
+    elements.stockTableBody.appendChild(tr);
+  }
+}
+
+async function openStockModal() {
+  showStockError("");
+
+  if (elements.stockExistente) {
+    elements.stockExistente.value = "";
+  }
+
+  if (elements.stockProducto) {
+    elements.stockProducto.value = "";
+    elements.stockProducto.readOnly = false;
+  }
+
+  if (elements.stockMarca) {
+    elements.stockMarca.value = "";
+    elements.stockMarca.readOnly = false;
+  }
+
+  if (elements.stockVariedad) {
+    elements.stockVariedad.value = "";
+    elements.stockVariedad.readOnly = false;
+  }
+
+  if (elements.stockCantidad) {
+    elements.stockCantidad.value = "";
+  }
+
+  if (elements.stockValor) {
+    elements.stockValor.value = "";
+  }
+
+  if (elements.stockMax) {
+    elements.stockMax.value = "";
+  }
+
+  elements.stockModal?.classList.remove("hidden");
+
+  await loadStockOptions();
+  renderStockTable();
+
+  elements.stockProducto?.focus();
+}
+
+function closeStockModal() {
+  elements.stockModal?.classList.add("hidden");
+}
+
+async function openStockStatusModal() {
+  elements.stockStatusModal?.classList.remove("hidden");
+
+  await loadStockOptions();
+  renderStockStatus();
+}
+
+function closeStockStatusModal() {
+  elements.stockStatusModal?.classList.add("hidden");
+}
+
+function renderStockStatus() {
+  if (!elements.stockStatusBody) return;
+
+  elements.stockStatusBody.innerHTML = "";
+
+  const rows = sortedStockRows();
+
+  elements.stockStatusEmpty?.classList.toggle(
+    "hidden",
+    rows.length > 0
+  );
+
+  if (elements.stockStatusSummary) {
+    elements.stockStatusSummary.innerHTML = "";
+
+    const totalGrams = rows.reduce(
+      (sum, row) => sum + parseStockGrams(row.cantidad_g),
+      0
+    );
+
+    const totalValue = rows.reduce(
+      (sum, row) =>
+        sum +
+        Math.round(
+          (parseStockGrams(row.valor_kg) / 1000) *
+            parseStockGrams(row.cantidad_g)
+        ),
+      0
+    );
+
+    const count = document.createElement("span");
+    count.innerHTML = `<strong>${rows.length}</strong> producto${
+      rows.length === 1 ? "" : "s"
+    }`;
+
+    const available = document.createElement("span");
+    available.innerHTML = `Disponible: <strong>${formatKg(
+      totalGrams
+    )}</strong>`;
+
+    const value = document.createElement("span");
+    value.innerHTML = `Valor total: <strong>${money(
+      totalValue
+    )}</strong>`;
+
+    elements.stockStatusSummary.appendChild(count);
+    elements.stockStatusSummary.appendChild(available);
+    elements.stockStatusSummary.appendChild(value);
+  }
+
+  for (const row of rows) {
+    const tr = document.createElement("tr");
+
+    const values = [
+      row.producto || "-",
+      row.marca || "-",
+      row.variedad || "-",
+      formatKg(row.cantidad_g),
+      money(row.valor_kg),
+      formatKg(row.stock_max_g),
+      row.fecha_carga || "-"
+    ];
+
+    for (const value of values) {
+      const td = document.createElement("td");
+      td.textContent = value;
+      tr.appendChild(td);
+    }
+
+    const actionsTd = document.createElement("td");
+    actionsTd.className = "stock-actions";
+
+    const editButton = document.createElement("button");
+    editButton.className = "stock-action-button";
+    editButton.title = "Editar";
+    editButton.setAttribute("aria-label", "Editar");
+    editButton.innerHTML = EDIT_ICON;
+    editButton.addEventListener("click", () =>
+      openEditStockModal(row)
+    );
+
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "stock-action-button danger";
+    deleteButton.title = "Eliminar";
+    deleteButton.setAttribute("aria-label", "Eliminar");
+    deleteButton.innerHTML = DELETE_ICON;
+    deleteButton.addEventListener("click", () =>
+      openDeleteStockModal(row)
+    );
+
+    actionsTd.appendChild(editButton);
+    actionsTd.appendChild(deleteButton);
+    tr.appendChild(actionsTd);
+
+    elements.stockStatusBody.appendChild(tr);
+  }
+}
+
+function openEditStockModal(row) {
+  state.editingStock = {
+    producto: row.producto,
+    marca: row.marca,
+    variedad: row.variedad
+  };
+
+  showStockEditError("");
+
+  if (elements.editProducto) {
+    elements.editProducto.value = row.producto || "";
+  }
+
+  if (elements.editMarca) {
+    elements.editMarca.value = row.marca || "";
+  }
+
+  if (elements.editVariedad) {
+    elements.editVariedad.value = row.variedad || "";
+  }
+
+  if (elements.editCantidad) {
+    elements.editCantidad.value = kgInputString(
+      row.cantidad_g
+    );
+  }
+
+  if (elements.editValor) {
+    elements.editValor.value = Math.round(
+      parseStockGrams(row.valor_kg)
+    );
+  }
+
+  if (elements.editMax) {
+    elements.editMax.value = kgInputString(
+      row.stock_max_g
+    );
+  }
+
+  elements.stockEditModal?.classList.remove("hidden");
+  elements.editProducto?.focus();
+}
+
+function closeStockEditModal() {
+  elements.stockEditModal?.classList.add("hidden");
+  state.editingStock = null;
+}
+
+function showStockEditError(text) {
+  if (!elements.stockEditError) return;
+
+  if (!text) {
+    elements.stockEditError.classList.add("hidden");
+    elements.stockEditError.textContent = "";
+    return;
+  }
+
+  elements.stockEditError.textContent = text;
+  elements.stockEditError.classList.remove("hidden");
+}
+
+async function saveStockEdit() {
+  const item = {
+    original: state.editingStock,
+    producto: elements.editProducto?.value || "",
+    marca: elements.editMarca?.value || "",
+    variedad: elements.editVariedad?.value || "",
+    cantidadKg: elements.editCantidad?.value || "",
+    valorKg: elements.editValor?.value || "",
+    stockMaxKg: elements.editMax?.value || ""
+  };
+
+  try {
+    const result = await window.balanzaAPI?.updateStock(
+      item
+    );
+
+    if (result?.ok === false) {
+      throw new Error(
+        result.error || "No se pudo actualizar el producto."
+      );
+    }
+
+    closeStockEditModal();
+    await loadStockOptions();
+    renderStockStatus();
+    showMessage(
+      "Producto actualizado correctamente.",
+      "success"
+    );
+  } catch (error) {
+    showStockEditError(
+      error?.message || "No se pudo actualizar el producto."
+    );
+  }
+}
+
+function openDeleteStockModal(row) {
+  state.deletingStock = {
+    producto: row.producto,
+    marca: row.marca,
+    variedad: row.variedad
+  };
+
+  if (elements.stockDeleteText) {
+    elements.stockDeleteText.textContent = `¿Eliminar "${productLabel(
+      row
+    )}" del stock? Esta acción no se puede deshacer.`;
+  }
+
+  elements.stockDeleteModal?.classList.remove("hidden");
+}
+
+function closeStockDeleteModal() {
+  elements.stockDeleteModal?.classList.add("hidden");
+  state.deletingStock = null;
+}
+
+async function confirmDeleteStock() {
+  try {
+    const result = await window.balanzaAPI?.deleteStock(
+      state.deletingStock
+    );
+
+    if (result?.ok === false) {
+      throw new Error(
+        result.error || "No se pudo eliminar el producto."
+      );
+    }
+
+    closeStockDeleteModal();
+    await loadStockOptions();
+    renderStockStatus();
+    showMessage(
+      "Producto eliminado del stock.",
+      "success"
+    );
+  } catch (error) {
+    closeStockDeleteModal();
+    showMessage(
+      error?.message || "No se pudo eliminar el producto.",
+      "error"
+    );
+  }
+}
+
+async function saveStockItem() {
+  const item = {
+    producto: elements.stockProducto?.value || "",
+    marca: elements.stockMarca?.value || "",
+    variedad: elements.stockVariedad?.value || "",
+    cantidadKg: elements.stockCantidad?.value || "",
+    valorKg: elements.stockValor?.value || "",
+    stockMaxKg: elements.stockMax?.value || ""
+  };
+
+  try {
+    const result = await window.balanzaAPI?.loadStock(item);
+
+    if (result?.ok === false) {
+      throw new Error(
+        result.error || "No se pudo cargar el stock."
+      );
+    }
+
+    closeStockModal();
+    await loadStockOptions();
+    showMessage("Stock cargado correctamente.", "success");
+  } catch (error) {
+    showStockError(
+      error?.message || "No se pudo cargar el stock."
+    );
+  }
+}
+
 async function pay() {
   if (state.total <= 0) {
     showMessage(
@@ -244,6 +861,26 @@ async function pay() {
     return;
   }
 
+  const productRow = getSelectedSaleProduct();
+
+  if (productRow) {
+    const available = parseStockGrams(
+      productRow.cantidad_g
+    );
+
+    if (state.weightGrams > available) {
+      showMessage(
+        `Stock insuficiente de "${
+          productRow.producto
+        }": disponible ${formatGrams(available)} g (${formatKg(
+          available
+        )}), pesado ${formatGrams(state.weightGrams)} g.`,
+        "error"
+      );
+      return;
+    }
+  }
+
   const sale = {
     date: new Date().toISOString(),
     weightGrams: state.weightGrams,
@@ -251,7 +888,14 @@ async function pay() {
       Number(elements.pricePerKilo?.value) || 0,
     total: state.total,
     paymentMethod: state.paymentMethod,
-    cashReceived
+    cashReceived,
+    product: productRow
+      ? {
+          producto: productRow.producto,
+          marca: productRow.marca,
+          variedad: productRow.variedad
+        }
+      : null
   };
 
   try {
@@ -269,6 +913,7 @@ async function pay() {
       "Venta registrada correctamente.",
       "success"
     );
+    await loadStockOptions();
   } catch (error) {
     showMessage(
       error?.message || "No se pudo registrar la venta.",
@@ -303,6 +948,11 @@ function resetSale() {
   }
 
   selectPayment(null);
+
+  if (elements.saleProduct) {
+    elements.saleProduct.value = "";
+  }
+
   elements.pricePerKilo?.focus();
 }
 
@@ -574,7 +1224,8 @@ function renderHistory() {
     "total",
     "metodo_pago",
     "recibido",
-    "vuelto"
+    "vuelto",
+    "producto"
   ];
 
   for (const row of rows) {
@@ -651,6 +1302,107 @@ function setupEvents() {
   elements.pricePerKilo?.addEventListener(
     "input",
     calculateTotal
+  );
+
+  elements.saleProduct?.addEventListener(
+    "change",
+    onSaleProductChange
+  );
+
+  elements.stockExistente?.addEventListener(
+    "change",
+    onStockExistenteChange
+  );
+
+  elements.closeStock?.addEventListener(
+    "click",
+    closeStockModal
+  );
+
+  elements.cancelStock?.addEventListener(
+    "click",
+    closeStockModal
+  );
+
+  elements.saveStockButton?.addEventListener(
+    "click",
+    saveStockItem
+  );
+
+  elements.stockModal?.addEventListener(
+    "click",
+    (event) => {
+      if (event.target === elements.stockModal) {
+        closeStockModal();
+      }
+    }
+  );
+
+  elements.closeStockStatus?.addEventListener(
+    "click",
+    closeStockStatusModal
+  );
+
+  elements.closeStockStatusBottom?.addEventListener(
+    "click",
+    closeStockStatusModal
+  );
+
+  elements.stockStatusModal?.addEventListener(
+    "click",
+    (event) => {
+      if (event.target === elements.stockStatusModal) {
+        closeStockStatusModal();
+      }
+    }
+  );
+
+  elements.closeStockEdit?.addEventListener(
+    "click",
+    closeStockEditModal
+  );
+
+  elements.cancelStockEdit?.addEventListener(
+    "click",
+    closeStockEditModal
+  );
+
+  elements.saveStockEditButton?.addEventListener(
+    "click",
+    saveStockEdit
+  );
+
+  elements.stockEditModal?.addEventListener(
+    "click",
+    (event) => {
+      if (event.target === elements.stockEditModal) {
+        closeStockEditModal();
+      }
+    }
+  );
+
+  elements.closeStockDelete?.addEventListener(
+    "click",
+    closeStockDeleteModal
+  );
+
+  elements.cancelStockDelete?.addEventListener(
+    "click",
+    closeStockDeleteModal
+  );
+
+  elements.confirmStockDeleteButton?.addEventListener(
+    "click",
+    confirmDeleteStock
+  );
+
+  elements.stockDeleteModal?.addEventListener(
+    "click",
+    (event) => {
+      if (event.target === elements.stockDeleteModal) {
+        closeStockDeleteModal();
+      }
+    }
   );
 
   elements.cashReceived?.addEventListener(
@@ -780,6 +1532,22 @@ function setupScaleEvents() {
       openHistoryModal();
     });
   }
+
+  if (
+    typeof window.balanzaAPI?.onOpenStock === "function"
+  ) {
+    window.balanzaAPI.onOpenStock(() => {
+      openStockModal();
+    });
+  }
+
+  if (
+    typeof window.balanzaAPI?.onOpenStockStatus === "function"
+  ) {
+    window.balanzaAPI.onOpenStockStatus(() => {
+      openStockStatusModal();
+    });
+  }
 }
 
 async function initialize() {
@@ -797,6 +1565,8 @@ async function initialize() {
   }
 
   await refreshPorts(savedPort);
+
+  await loadStockOptions();
 
   try {
     const connection =

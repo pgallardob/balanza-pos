@@ -31,6 +31,7 @@
       "storage.js",
       "sales.js",
       "protocols.js",
+      "stock.js",
       "index.html",
       "styles.css",
       "renderer.js",

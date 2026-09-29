@@ -16,6 +16,14 @@ const {
 
 const { appendSale, readSales } = require("./sales");
 
+const {
+  readStock,
+  loadStockItem,
+  deductStock,
+  updateStockItem,
+  deleteStockItem
+} = require("./stock");
+
 let mainWindow = null;
 
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
@@ -60,6 +68,27 @@ function buildMenu() {
         isMac
           ? { role: "close", label: "Cerrar ventana" }
           : { role: "quit", label: "Salir" }
+      ]
+    },
+    {
+      label: "Stock",
+      submenu: [
+        {
+          label: "Cargar Stock",
+          click: () => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.send("menu:stock");
+            }
+          }
+        },
+        {
+          label: "Estado de Stock",
+          click: () => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.send("menu:stockStatus");
+            }
+          }
+        }
       ]
     },
     {
@@ -264,6 +293,17 @@ ipcMain.handle("settings:save", async (_, settings) => {
 
 ipcMain.handle("sale:save", async (_, sale) => {
   try {
+    if (sale?.product) {
+      const deduction = deductStock(
+        sale.product,
+        sale.weightGrams
+      );
+
+      if (deduction?.ok === false) {
+        return deduction;
+      }
+    }
+
     const file = appendSale(sale);
     return { ok: true, file };
   } catch (error) {
@@ -284,6 +324,52 @@ ipcMain.handle("sales:list", async () => {
       count: 0,
       totalSum: 0,
       error: error?.message || "No se pudo leer el historial."
+    };
+  }
+});
+
+ipcMain.handle("stock:list", async () => {
+  try {
+    return { ok: true, ...readStock() };
+  } catch (error) {
+    return {
+      ok: false,
+      rows: [],
+      count: 0,
+      error: error?.message || "No se pudo leer el stock."
+    };
+  }
+});
+
+ipcMain.handle("stock:load", async (_, item) => {
+  try {
+    return loadStockItem(item);
+  } catch (error) {
+    return {
+      ok: false,
+      error: error?.message || "No se pudo cargar el stock."
+    };
+  }
+});
+
+ipcMain.handle("stock:update", async (_, item) => {
+  try {
+    return updateStockItem(item);
+  } catch (error) {
+    return {
+      ok: false,
+      error: error?.message || "No se pudo actualizar el producto."
+    };
+  }
+});
+
+ipcMain.handle("stock:delete", async (_, product) => {
+  try {
+    return deleteStockItem(product);
+  } catch (error) {
+    return {
+      ok: false,
+      error: error?.message || "No se pudo eliminar el producto."
     };
   }
 });

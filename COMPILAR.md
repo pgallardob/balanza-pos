@@ -18,14 +18,25 @@ Descripción general del proyecto: `README.md`
   decimales), así el vuelto siempre cuadra con el monto mostrado.
 - **Medios de pago**: Efectivo, Débito, Crédito y Transferencia. Con
   Efectivo calcula el vuelto a partir del monto recibido.
-- **Botón Pagar**: registra la venta en `ventas.csv` y deja el sistema
-  listo para una nueva operación (el peso vuelve a 0 en pantalla).
+- **Control de stock**: menú *Stock → Cargar Stock* (nombre, marca,
+  variedad, cantidad en kg, valor kilo IVA incluido y stock máximo) y
+  menú *Stock → Estado de Stock* (tabla con disponible, valor/kg,
+  máximo y última carga, resumen total y botones para editar o eliminar
+  cada producto). Los selectores listan los productos ordenados
+  alfabéticamente.
+- **Descuento exacto por gramos**: al vender con un producto seleccionado
+  se descuentan los gramos exactos del peso mostrado; si el stock no
+  alcanza, la venta se bloquea indicando disponible y pesado en gramos.
+- **Botón Pagar**: registra la venta en `ventas.csv` (con la columna de
+  producto), descuenta el stock y deja el sistema listo para una nueva
+  operación (el peso vuelve a 0 en pantalla).
 - **Historial de ventas**: botón "Historial", menú *Archivo → Historial
   de ventas* o `Ctrl+H`. Muestra tabla con todas las ventas, resumen de
   cantidad y total vendido, **filtro por día** y **botón Imprimir**
   (imprime solo la tabla, respetando el filtro activo). El peso se
   muestra en gramos enteros (ej. `1250`, sin decimales).
-- **Menú completo en español**: Archivo, Edición, Ver, Ventana y Ayuda.
+- **Menú completo en español**: Archivo, Stock, Edición, Ver, Ventana y
+  Ayuda.
 - **Interfaz**: logo `laosita.jpeg` centrado en el header, layout
   compacto sin scroll, botones en tonos café de la paleta del logo y
   footer fijo al fondo con la firma de copyright.
@@ -43,7 +54,7 @@ Los archivos indispensables del proyecto son:
 
 ```
 main.js  preload.js  balanza.js  protocols.js  storage.js  sales.js
-renderer.js  index.html  styles.css  package.json  assets/
+stock.js  renderer.js  index.html  styles.css  package.json  assets/
 ```
 
 > **Importante:** `serialport` contiene un binario nativo distinto en cada
@@ -159,7 +170,11 @@ del workflow: `balanza-pos-windows-latest`, `balanza-pos-macos-latest`,
 | Dato | Windows | macOS | Linux |
 |------|---------|-------|-------|
 | Ventas (`ventas.csv`) | `%APPDATA%\balanza-pos\ventas.csv` | `~/Library/Application Support/balanza-pos/ventas.csv` | `~/.config/balanza-pos/ventas.csv` |
+| Stock (`stock.csv`) | `%APPDATA%\balanza-pos\stock.csv` | `~/Library/Application Support/balanza-pos/stock.csv` | `~/.config/balanza-pos/stock.csv` |
 | Configuración (`settings.json`) | `%APPDATA%\balanza-pos\settings.json` | `~/Library/Application Support/balanza-pos/settings.json` | `~/.config/balanza-pos/settings.json` |
 
-El CSV de ventas se abre directo en Excel/LibreOffice. Columnas:
-`fecha;hora;peso_g;precio_kg;total;metodo_pago;recibido;vuelto`
+Los CSV se abren directo en Excel/LibreOffice. Columnas de `ventas.csv`:
+`fecha;hora;peso_g;precio_kg;total;metodo_pago;recibido;vuelto;producto`
+
+Columnas de `stock.csv`:
+`producto;marca;variedad;cantidad_g;valor_kg;stock_max_g;fecha_carga`

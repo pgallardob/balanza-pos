@@ -17,11 +17,24 @@ Desarrollado por **P. Gallardo** — © 2026 Todos los derechos reservados.
   enteros (CLP, sin decimales).
 - **4 medios de pago**: Efectivo (con cálculo de vuelto), Débito, Crédito
   y Transferencia.
+- **Control de stock por producto**: menú *Stock → Cargar Stock* con
+  nombre, marca, variedad, cantidad (kg), valor kilo (IVA incluido) y
+  stock máximo. El selector "Producto existente" lista los productos
+  ordenados alfabéticamente y autocompleta sus datos para sumar stock
+  sin duplicados.
+- **Descuento automático de stock**: al vender con un producto
+  seleccionado se descuentan **los gramos exactos** del peso mostrado
+  en pantalla (sin aproximaciones). Si el stock no alcanza, la venta
+  se bloquea indicando lo disponible y lo pesado en gramos.
+- **Estado de Stock**: menú *Stock → Estado de Stock* con tabla de
+  productos (disponible, valor/kg, máximo, última carga), resumen con
+  total de kg y valor, y botones para **editar** o **eliminar** cada
+  producto.
 - **Registro de ventas** en `ventas.csv` (separador `;`, abre directo en
-  Excel/LibreOffice).
+  Excel/LibreOffice) con la columna de producto vendido.
 - **Historial de ventas**: tabla completa, resumen de cantidad y total
   vendido, filtro por día e impresión (solo la tabla).
-- **Menú en español**: Archivo, Edición, Ver, Ventana y Ayuda
+- **Menú en español**: Archivo, Stock, Edición, Ver, Ventana y Ayuda
   (`Ctrl+H` abre el historial).
 - **Multiplataforma**: ejecutables para Windows, macOS y Linux generados
   automáticamente con GitHub Actions.
@@ -99,13 +112,17 @@ descargables en cada ejecución del workflow.
 
 1. **Conecta la balanza** por USB — la app detecta el puerto serial
    automáticamente.
-2. **Pesa el producto** — el peso aparece en el display verde en gramos.
-3. **Ingresa el precio por kilo** — el total se calcula al instante.
-4. **Selecciona el medio de pago** — en Efectivo ingresa el monto recibido
+2. **Selecciona el producto** en el selector "Producto" — el precio por
+   kilo se autocompleta con el valor cargado en el stock y al pagar se
+   descuentan los gramos vendidos. Déjalo en "Seleccionar" para una venta
+   libre sin control de stock.
+3. **Pesa el producto** — el peso aparece en el display verde en gramos.
+4. **Ingresa o ajusta el precio por kilo** — el total se calcula al instante.
+5. **Selecciona el medio de pago** — en Efectivo ingresa el monto recibido
    para ver el vuelto.
-5. **Presiona Pagar** — la venta se guarda en el CSV y el sistema queda
-   listo para la siguiente operación.
-6. **Historial** — botón "Historial" o `Ctrl+H` para revisar, filtrar por
+6. **Presiona Pagar** — la venta se guarda en el CSV, el stock se descuenta
+   y el sistema queda listo para la siguiente operación.
+7. **Historial** — botón "Historial" o `Ctrl+H` para revisar, filtrar por
    día e imprimir ventas.
 
 ---
@@ -120,6 +137,7 @@ balanza-pos/
 ├── balanza.js       # Conexión serial con la balanza
 ├── protocols.js     # Parseo de protocolos de peso de distintas balanzas
 ├── sales.js         # Lectura/escritura de ventas en ventas.csv
+├── stock.js         # Control de stock en stock.csv (cargar, editar, eliminar, descontar)
 ├── storage.js       # Configuración persistente (settings.json)
 ├── index.html       # Interfaz de usuario
 ├── styles.css       # Estilos (tema café + display verde fluor)
@@ -135,10 +153,14 @@ balanza-pos/
 | Dato | Windows | macOS | Linux |
 |------|---------|-------|-------|
 | Ventas (`ventas.csv`) | `%APPDATA%\balanza-pos\ventas.csv` | `~/Library/Application Support/balanza-pos/ventas.csv` | `~/.config/balanza-pos/ventas.csv` |
+| Stock (`stock.csv`) | `%APPDATA%\balanza-pos\stock.csv` | `~/Library/Application Support/balanza-pos/stock.csv` | `~/.config/balanza-pos/stock.csv` |
 | Configuración (`settings.json`) | `%APPDATA%\balanza-pos\settings.json` | `~/Library/Application Support/balanza-pos/settings.json` | `~/.config/balanza-pos/settings.json` |
 
-Columnas del CSV:
-`fecha;hora;peso_g;precio_kg;total;metodo_pago;recibido;vuelto`
+Columnas de `ventas.csv`:
+`fecha;hora;peso_g;precio_kg;total;metodo_pago;recibido;vuelto;producto`
+
+Columnas de `stock.csv`:
+`producto;marca;variedad;cantidad_g;valor_kg;stock_max_g;fecha_carga`
 
 ---
 

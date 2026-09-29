@@ -40,6 +40,16 @@
 
     <section class="main-card">
 
+      <div class="product-area">
+        <label for="saleProduct">Producto</label>
+
+        <div class="product-row">
+          <select id="saleProduct">
+            <option value="">Seleccionar</option>
+          </select>
+        </div>
+      </div>
+
       <div class="weight-area">
         <div class="label">PESO</div>
 
@@ -505,6 +515,7 @@
             <th>Pago</th>
             <th>Recibido</th>
             <th>Vuelto</th>
+            <th>Producto</th>
           </tr>
         </thead>
         <tbody id="historyBody"></tbody>
@@ -529,6 +540,411 @@
           class="secondary-button"
         >
           Cerrar
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div
+  id="stockModal"
+  class="modal hidden"
+>
+
+  <div class="modal-content stock-content">
+
+    <div class="modal-header">
+      <h2>Cargar Stock</h2>
+
+      <button
+        id="closeStock"
+        class="close-button"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="field full">
+        <label for="stockExistente">
+          Producto existente
+        </label>
+
+        <select id="stockExistente">
+          <option value="">— Nuevo producto —</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="stockProducto">
+          Nombre del producto
+        </label>
+
+        <input
+          id="stockProducto"
+          type="text"
+          placeholder="Ejemplo: Tocino"
+        >
+      </div>
+
+      <div class="field">
+        <label for="stockMarca">
+          Marca
+        </label>
+
+        <input
+          id="stockMarca"
+          type="text"
+          placeholder="Ejemplo: La Osita"
+        >
+      </div>
+
+      <div class="field">
+        <label for="stockVariedad">
+          Variedad
+        </label>
+
+        <input
+          id="stockVariedad"
+          type="text"
+          placeholder="Ejemplo: Ahumado"
+        >
+      </div>
+
+      <div class="field">
+        <label for="stockCantidad">
+          Cantidad (kg)
+        </label>
+
+        <input
+          id="stockCantidad"
+          type="text"
+          inputmode="decimal"
+          placeholder="Ejemplo: 2,5"
+        >
+      </div>
+
+      <div class="field">
+        <label for="stockValor">
+          Valor kilo (IVA incluido)
+        </label>
+
+        <input
+          id="stockValor"
+          type="number"
+          min="0"
+          step="1"
+          inputmode="numeric"
+        >
+      </div>
+
+      <div class="field">
+        <label for="stockMax">
+          Stock máximo (kg)
+        </label>
+
+        <input
+          id="stockMax"
+          type="text"
+          inputmode="decimal"
+          placeholder="Ejemplo: 10"
+        >
+      </div>
+
+    </div>
+
+    <div
+      id="stockError"
+      class="settings-error hidden"
+    ></div>
+
+    <h3 class="stock-section-title">Stock actual</h3>
+
+    <div class="history-table-wrap">
+
+      <table class="history-table stock-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Marca</th>
+            <th>Variedad</th>
+            <th>Disponible</th>
+            <th>Valor/kg</th>
+            <th>Máximo</th>
+          </tr>
+        </thead>
+        <tbody id="stockTableBody"></tbody>
+      </table>
+
+      <div
+        id="stockEmpty"
+        class="history-empty hidden"
+      >
+        No hay productos cargados todavía.
+      </div>
+
+    </div>
+
+    <div class="modal-actions">
+
+      <div></div>
+
+      <div>
+        <button
+          id="cancelStock"
+          class="secondary-button"
+        >
+          Cancelar
+        </button>
+
+        <button
+          id="saveStockButton"
+          class="primary-button"
+        >
+          Guardar stock
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div
+  id="stockStatusModal"
+  class="modal hidden"
+>
+
+  <div class="modal-content history-content">
+
+    <div class="modal-header">
+      <h2>Estado de Stock</h2>
+
+      <button
+        id="closeStockStatus"
+        class="close-button"
+      >
+        ×
+      </button>
+    </div>
+
+    <div
+      id="stockStatusSummary"
+      class="history-summary"
+    ></div>
+
+    <div class="history-table-wrap">
+
+      <table class="history-table stock-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Marca</th>
+            <th>Variedad</th>
+            <th>Disponible</th>
+            <th>Valor/kg</th>
+            <th>Máximo</th>
+            <th>Última carga</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="stockStatusBody"></tbody>
+      </table>
+
+      <div
+        id="stockStatusEmpty"
+        class="history-empty hidden"
+      >
+        No hay productos cargados todavía.
+      </div>
+
+    </div>
+
+    <div class="modal-actions">
+
+      <div></div>
+
+      <div>
+        <button
+          id="closeStockStatusBottom"
+          class="secondary-button"
+        >
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div
+  id="stockEditModal"
+  class="modal hidden"
+>
+
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2>Editar Producto</h2>
+
+      <button
+        id="closeStockEdit"
+        class="close-button"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="field">
+        <label for="editProducto">
+          Nombre del producto
+        </label>
+
+        <input
+          id="editProducto"
+          type="text"
+        >
+      </div>
+
+      <div class="field">
+        <label for="editMarca">
+          Marca
+        </label>
+
+        <input
+          id="editMarca"
+          type="text"
+        >
+      </div>
+
+      <div class="field">
+        <label for="editVariedad">
+          Variedad
+        </label>
+
+        <input
+          id="editVariedad"
+          type="text"
+        >
+      </div>
+
+      <div class="field">
+        <label for="editCantidad">
+          Cantidad (kg)
+        </label>
+
+        <input
+          id="editCantidad"
+          type="text"
+          inputmode="decimal"
+        >
+      </div>
+
+      <div class="field">
+        <label for="editValor">
+          Valor kilo (IVA incluido)
+        </label>
+
+        <input
+          id="editValor"
+          type="number"
+          min="0"
+          step="1"
+          inputmode="numeric"
+        >
+      </div>
+
+      <div class="field">
+        <label for="editMax">
+          Stock máximo (kg)
+        </label>
+
+        <input
+          id="editMax"
+          type="text"
+          inputmode="decimal"
+        >
+      </div>
+
+    </div>
+
+    <div
+      id="stockEditError"
+      class="settings-error hidden"
+    ></div>
+
+    <div class="modal-actions">
+
+      <div></div>
+
+      <div>
+        <button
+          id="cancelStockEdit"
+          class="secondary-button"
+        >
+          Cancelar
+        </button>
+
+        <button
+          id="saveStockEditButton"
+          class="primary-button"
+        >
+          Guardar cambios
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div
+  id="stockDeleteModal"
+  class="modal hidden"
+>
+
+  <div class="modal-content stock-delete-content">
+
+    <div class="modal-header">
+      <h2>Eliminar Producto</h2>
+
+      <button
+        id="closeStockDelete"
+        class="close-button"
+      >
+        ×
+      </button>
+    </div>
+
+    <p id="stockDeleteText" class="stock-delete-text"></p>
+
+    <div class="modal-actions">
+
+      <div></div>
+
+      <div>
+        <button
+          id="cancelStockDelete"
+          class="secondary-button"
+        >
+          Cancelar
+        </button>
+
+        <button
+          id="confirmStockDeleteButton"
+          class="danger-button"
+        >
+          Eliminar
         </button>
       </div>
 

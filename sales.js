@@ -6,7 +6,7 @@ const directory = app.getPath("userData");
 const filePath = path.join(directory, "ventas.csv");
 
 const HEADER =
-  "fecha;hora;peso_g;precio_kg;total;metodo_pago;recibido;vuelto\r\n";
+  "fecha;hora;peso_g;precio_kg;total;metodo_pago;recibido;vuelto;producto\r\n";
 
 const PAYMENT_LABELS = {
   debito: "Débito",
@@ -45,6 +45,14 @@ function appendSale(sale) {
     sale?.paymentMethod ||
     "";
 
+  const producto = [
+    sale?.product?.producto,
+    sale?.product?.marca,
+    sale?.product?.variedad
+  ]
+    .filter(Boolean)
+    .join(" - ");
+
   const line =
     [
       fecha,
@@ -54,7 +62,8 @@ function appendSale(sale) {
       total,
       method,
       received,
-      change
+      change,
+      producto
     ].join(";") + "\r\n";
 
   if (!fs.existsSync(directory)) {
@@ -63,6 +72,19 @@ function appendSale(sale) {
 
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, HEADER, "utf8");
+  } else {
+    const content = fs.readFileSync(filePath, "utf8");
+    const firstLine = content.split(/\r?\n/, 1)[0];
+
+    if (firstLine !== HEADER.trimEnd()) {
+      const lines = content.split(/\r?\n/).filter(Boolean);
+      lines[0] = HEADER.trimEnd();
+      fs.writeFileSync(
+        filePath,
+        lines.join("\r\n") + "\r\n",
+        "utf8"
+      );
+    }
   }
 
   fs.appendFileSync(filePath, line, "utf8");
@@ -87,7 +109,8 @@ function readSales() {
       total,
       metodo_pago,
       recibido,
-      vuelto
+      vuelto,
+      producto
     ] = line.split(";");
 
     return {
@@ -98,7 +121,8 @@ function readSales() {
       total,
       metodo_pago,
       recibido,
-      vuelto
+      vuelto,
+      producto: producto ?? ""
     };
   });
 
