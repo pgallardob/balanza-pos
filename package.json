@@ -1,6 +1,6 @@
 {
   "name": "balanza-pos",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Sistema POS para balanzas electrónicas mediante conexión serial USB",
   "main": "main.js",
   "author": "P. Gallardo <pgallardob@hotmail.com>",

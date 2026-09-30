@@ -73,8 +73,8 @@ npm run dist:win
 
 Genera en `dist/`:
 
-- `Balanza POS 1.0.0.exe` — versión **portable** (doble clic, sin instalación)
-- `Balanza POS Setup 1.0.0.exe` — instalador con accesos directos
+- `Balanza POS 1.1.0.exe` — versión **portable** (doble clic, sin instalación)
+- `Balanza POS Setup 1.1.0.exe` — instalador con accesos directos
 
 ### macOS
 

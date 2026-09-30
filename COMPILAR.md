@@ -73,9 +73,9 @@ npm run dist:win
 
 Genera en `dist\`:
 
-- **`Balanza POS 1.0.0.exe`** — versión **portable**: copiar al pendrive y
+- **`Balanza POS 1.1.0.exe`** — versión **portable**: copiar al pendrive y
   ejecutar con doble clic, sin instalación.
-- **`Balanza POS Setup 1.0.0.exe`** — instalador con acceso directo en
+- **`Balanza POS Setup 1.1.0.exe`** — instalador con acceso directo en
   escritorio y menú inicio.
 
 > Nota: `npmRebuild` está en `false` en `package.json` porque serialport
