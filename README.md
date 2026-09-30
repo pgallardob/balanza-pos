@@ -108,6 +108,20 @@ descargables en cada ejecución del workflow.
 
 ---
 
+## Instalar en otro computador
+
+Dos avisos al usar los ejecutables en una máquina nueva:
+
+- **SmartScreen**: al ejecutarlo por primera vez, Windows puede mostrar
+  "Windows protegió tu PC" (exe sin certificado de firma). Clic en
+  **"Más información" → "Ejecutar de todas formas"** — es normal en
+  software propio.
+- **Los datos son por computador**: ventas y stock se guardan en
+  `%APPDATA%\balanza-pos\` de cada máquina (ver tabla más abajo) — en
+  una nueva partirá con historial vacío.
+
+---
+
 ## Uso
 
 1. **Conecta la balanza** por USB — la app detecta el puerto serial
